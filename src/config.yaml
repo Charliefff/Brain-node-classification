@@ -1,0 +1,24 @@
+data:
+  train_E: "../dataset/training_data/MAP_Preprocessing_S.pt"
+  train_W: "../dataset/training_data/MAP_Preprocessing_W.pt"
+  test_E: "../dataset/training_data/MAP_Preprocessing_S_test.pt"
+  test_W: "../dataset/training_data/MAP_Preprocessing_W_test.pt"
+  adj: null
+  cut_off: True
+  add_edges_ratio: 0.0
+
+training:
+  batch_size: 128
+  num_epochs: 30
+  learning_rate: 0.0001
+  log_dir: "./logs"
+
+model:
+  
+  in_features: 375
+  hidden_features: 64
+  out_features: 2
+  dropout: 0.5
+  num_heads: 2
+  num_layers: 2
+  model_type: "gat"
