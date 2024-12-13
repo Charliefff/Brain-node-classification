@@ -1,0 +1,25 @@
+data:
+  #wavelet (1,30,375,64)
+  train_E: "../../dataset/training_data/wavelet/train_Preprocessing_E.pt"
+  train_W: "../../dataset/training_data/wavelet/train_Preprocessing_W.pt"
+  test_E: "../../dataset/training_data/wavelet/test_Preprocessing_E.pt"
+  test_W: "../../dataset/training_data/wavelet/test_Preprocessing_W.pt"
+  log_dir: "runs/waveletEGGNet" # runs/EEGNet, runs/CNN, runs/CNN3D ...
+
+training:
+  batch_size: 128
+  channels : 64
+  num_epochs: 30
+  learning_rate: 0.0002
+
+model:
+  model_type: "waveletEGGNet" # waveletEGGNet, EEGNet, CNN, CNN3D
+  num_classes: 2
+  channels: 64
+  kernLength: 64
+  F1: 8
+  F2: 16
+  dropoutRate: 0.5
+  dropoutType: "Dropout" # SpatialDropout2D, Dropout
+  Dim_expand: 2 # F1 * Dim_expand = F2
+
