@@ -2,10 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-import torch
-import torch.nn as nn
-
 class GCNLayer(nn.Module):
     def __init__(self, in_features, out_features, dropout=0.0, apply_relu=True):
         super(GCNLayer, self).__init__()
@@ -83,7 +79,7 @@ class GATLayer(nn.Module):
         x_proj_i = x_proj.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)
         # x_proj_j: [b, i, j, h, d] (將每個節點特徵複製擴展到 i 維)
         x_proj_j = x_proj.unsqueeze(1).expand(-1, num_nodes, -1, -1, -1)
-
+        
         # 合併 i 和 j 節點特徵: x_concat: [b, i, j, h, 2*d]
         x_concat = torch.cat([x_proj_i, x_proj_j], dim=-1)
 
@@ -176,7 +172,7 @@ class Model(nn.Module):
             print("Using GAT-GCN model")
             self.model = GAT_GCN(in_features, hidden_features, out_features, num_heads, dropout, num_layers)
         else:
-            raise ValueError("Invalid Input model_type. Must be one of ['gcn', 'gat']")
+            raise ValueError("Invalid Input model_type. Must be one of ['gcn', 'gat', 'gcn_gat']")
 
     def forward(self, x, adj):
         return self.model(x, adj)
@@ -189,7 +185,11 @@ if __name__ == "__main__":
     adj = (adj + adj.transpose(1,2)) > 0
     adj = adj.int()
 
-    model = GAT(in_features=8, hidden_features=16, out_features=3, num_heads=4, dropout=0.1, num_layers=2)
+    model = GAT(in_features=8, 
+                hidden_features=16, 
+                out_features=3, 
+                num_heads=4, 
+                dropout=0.1, 
+                num_layers=2)
     out = model(x, adj)
-    print("GAT output shape:", out.shape)  # 預期 [2, 4, 3]
-
+    print("GAT output shape:", out.shape) 

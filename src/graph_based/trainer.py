@@ -63,7 +63,7 @@ def train_model(train_loader, val_loader, model, optimizer, criterion , num_epoc
 
     writer.close()  # 關閉 TensorBoard 寫入器
 
-def test_model(test_loader, model, criterion, device="cpu", log_dir="./logs"):
+def test_model(test_loader, model, criterion, device="cpu", log_dir="./runs"):
 
     writer = SummaryWriter(log_dir)
     model.eval()

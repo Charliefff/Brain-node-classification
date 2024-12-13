@@ -52,15 +52,6 @@ def normalize(train_data, test_data):
 
     return train_data, test_data
 
-# 正規化數據
-def normalize(train_data, test_data):
-    train_data_mean = train_data.mean(dim=(0, 1), keepdim=True)
-    train_data_std = train_data.std(dim=(0, 1), keepdim=True)
-
-    train_data = (train_data - train_data_mean) / train_data_std
-    test_data = (test_data - train_data_mean) / train_data_std
-
-    return train_data, test_data
 
 # 擴增鄰接矩陣
 def densify_adj(adj_sparse, add_edges_ratio=0.1):
