@@ -36,7 +36,7 @@ def printConfig(config):
 
     # 打印分層結構
     print("\n[Data]")
-    for key in ["train_E", "train_W", "test_E", "test_W", "log_dir"]:
+    for key in ["train_E", "train_W", "test_E", "test_W", "log_dir", "save_path"]:
         if key in config:
             print(f"{key}: {config[key]}")
 
@@ -46,7 +46,7 @@ def printConfig(config):
             print(f"{key}: {config[key]}")
 
     print("\n[Model]")
-    for key in ["model_type", "num_classes", "channels", "kernLength", "F1", "F2", "dropoutRate", "dropoutType", "Dim_expand"]:
+    for key in ["model_type", "num_classes", "channels", "kernLength", "squeeze_dim", "F1", "F2", "poolKern1", "poolKern2", "dropoutRate", "dropoutType", "Dim_expand", "enable_atten"]:
         if key in config:
             print(f"{key}: {config[key]}")
 
@@ -81,7 +81,8 @@ def main():
         criterion, 
         num_epochs=config["num_epochs"], 
         device=device,
-        log_dir=config["log_dir"]
+        log_dir=config["log_dir"],
+        save_path=config["save_path"]
     )
 
     

@@ -10,8 +10,11 @@ class BaseNet(nn.Module, ABC):
         self.wavelet = kwargs.get("wavelet", 30)
         self.dropoutRate = kwargs.get("dropoutRate", 0.5)
         self.dropoutType = kwargs.get("dropoutType", 'Dropout')
+        self.squeeze_dim = kwargs.get("squeeze_dim", 1)
         self.F1 = kwargs.get("F1", 8)
         self.F2 = kwargs.get("F2", 16)
+        self.poolKern1 = kwargs.get("poolKern1", 4)
+        self.poolKern2 = kwargs.get("poolKern2", 8)
         self.D = kwargs.get("D", 2)
         self.kernLength = kwargs.get("kernLength", 64)
         self.dropout = nn.Dropout2d if self.dropoutType == 'SpatialDropout2D' else nn.Dropout
@@ -23,5 +26,5 @@ class BaseNet(nn.Module, ABC):
             self.fc = nn.Linear(x.shape[1], self.nb_classes).to(device)
 
     @abstractmethod
-    def forward(self, x):
+    def forward(self, x, attention=False):
         pass

@@ -5,11 +5,12 @@ data:
   test_E: "../../dataset/training_data/wavelet/test_Preprocessing_E.pt"
   test_W: "../../dataset/training_data/wavelet/test_Preprocessing_W.pt"
   log_dir: "runs/waveletEGGNet" # runs/EEGNet, runs/CNN, runs/CNN3D ...
+  save_path: "checkpoint/waveletEGGNet.pth" # checkpoint/EEGNet.pth, checkpoint/CNN.pth, checkpoint/CNN3D.pth ...
 
 training:
   batch_size: 128
   channels : 64
-  num_epochs: 30
+  num_epochs: 40
   learning_rate: 0.0002
 
 model:
@@ -17,9 +18,14 @@ model:
   num_classes: 2
   channels: 64
   kernLength: 64
+  squeeze_dim: 1
   F1: 8
   F2: 16
-  dropoutRate: 0.5
+  poolKern1: 4
+  poolKern2: 8
+  dropoutRate: 0.2
   dropoutType: "Dropout" # SpatialDropout2D, Dropout
   Dim_expand: 2 # F1 * Dim_expand = F2
+  enable_atten: True
+
 

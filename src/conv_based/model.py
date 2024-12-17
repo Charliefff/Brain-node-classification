@@ -27,7 +27,7 @@ class CNN(BaseNet):
             self.dropout(self.dropoutRate)
         )
 
-    def forward(self, x):
+    def forward(self, x, attention=False):
         # x = (batch, freq, sample, channel)
         x = x.permute(0, 3, 1, 2)  # x = (batch, channel, freq, sample) -> (batch, freq, sample, channel)
         x = self.conv1(x).permute(0, 2, 1, 3)  # x = (batch, freq, sample, channel) -> (batch, sample, freq, channel)
@@ -36,7 +36,7 @@ class CNN(BaseNet):
 
         x = x.flatten(start_dim=1)  # Flatten for FC
         self.build_fc(x, x.device)  # 動態初始化 Fully Connected 層
-        return self.fc(x)
+        return self.fc(x), None
 
             
 class CNN_3D(BaseNet):
@@ -48,7 +48,6 @@ class CNN_3D(BaseNet):
             nn.BatchNorm3d(self.F1, affine=False),
             nn.ReLU(),
             nn.Dropout(self.dropoutRate),
-
             nn.Conv3d(self.F1, self.F1, (1, self.Chans, 1), bias=False),
             nn.BatchNorm3d(self.F1, affine=False),
             nn.ReLU(),
@@ -60,45 +59,47 @@ class CNN_3D(BaseNet):
             nn.Dropout(self.dropoutRate)
         )
         
-    def forward(self, x):
+    def forward(self, x, attention=False):
         x = x.unsqueeze(1)  # x = (batch, freq, sample, channel) -> (batch, 1, freq, sample, channel)
         x = x.permute(0, 1, 2, 4, 3)  # x = (batch, 1, freq, sample, channel) -> (batch, 1, freq, channel, sample)
         x = self.conv3d(x)
         x = x.flatten(start_dim=1)
         self.build_fc(x, x.device)
-        return self.fc(x)
+        return self.fc(x), None
 
 class waveletEGGNet(BaseNet):
     def __init__(self, **kwargs):
         super(waveletEGGNet, self).__init__(**kwargs)
         
         dropout = nn.Dropout2d if self.dropoutType == 'SpatialDropout2D' else nn.Dropout
-
+        self.convtoEGG = nn.Conv2d(30, self.squeeze_dim, (1, 1), padding='same', bias=False) #(b, 30, a, t) -> (b, 1, a, t)
         self.conv1 = nn.Sequential(
-            nn.Conv2d(30, self.F1, (1, self.kernLength), padding='same', bias=False),
+            nn.Conv2d(self.squeeze_dim, self.F1, (1, self.kernLength), padding='same', bias=False), #(b, 1, a, t) -> (b, F1, a, t)
             nn.BatchNorm2d(self.F1),
-            nn.Conv2d(self.F1, self.F1 * self.D, (self.Chans, 1), groups=self.F1, bias=False),
+            nn.Conv2d(self.F1, self.F1 * self.D, (self.Chans, 1), groups=self.F1, bias=False), #(b, F1, t, a) -> (b, F1*D, 1, a)
             nn.BatchNorm2d(self.F1 * self.D),
             nn.ELU(),
-            nn.AvgPool2d((1, 4)),
+            nn.AvgPool2d((1, self.poolKern1)), #(b, F1*D, 1, a // 4)
             dropout(self.dropoutRate)
         )
         self.separableConv = nn.Sequential(
-            nn.Conv2d(self.F1 * self.D, self.F2, (1, 16), padding='same', bias=False),
+            nn.Conv2d(self.F1 * self.D, self.F2, (1, self.F2), padding='same', bias=False), # (b, F1*D, 1, a // 4) -> (b, F2, 1, a // 4)
             nn.BatchNorm2d(self.F2),
             nn.ELU(),
-            nn.AvgPool2d((1, 8)),
+            nn.AvgPool2d((1, self.poolKern2)), # (b, F2, 1, a // 4 // 8)
             dropout(self.dropoutRate)
         )
 
     def forward(self, x):
-        x = x.permute(0, 1, 3, 2)  # (batch, freq, sample, channel) -> (batch, freq, channel, sample)
-        x = self.conv1(x)
-        x = self.separableConv(x)
-        x = x.flatten(start_dim=1)
+        
+        x = x.permute(0, 1, 3, 2)  
+        x = self.convtoEGG(x)
+        x = self.conv1(x) 
+        x = self.separableConv(x) 
+        x = x.flatten(start_dim=1) 
         self.build_fc(x, x.device)
         
-        return self.fc(x)
+        return self.fc(x), self.convtoEGG.weight
 
     
 class EEGNet(BaseNet):
@@ -108,10 +109,11 @@ class EEGNet(BaseNet):
         self.dropout = nn.Dropout2d if self.dropoutType == 'SpatialDropout2D' else nn.Dropout
         
         self.conv1 = nn.Sequential(
-            nn.Conv2d(1, self.F1, (1, self.kernLength), padding='same', bias=False),
+            # (batch, 1, time, sample)
+            nn.Conv2d(1, self.F1, (1, self.kernLength), padding='same', bias=False), 
             nn.BatchNorm2d(self.F1),
             nn.ELU(),
-            nn.Conv2d(self.F1, self.F1 * self.D, (self.Chans, 1), groups=F1, bias=False),
+            nn.Conv2d(self.F1, self.F1 * self.D, (self.Chans, 1), groups=self.F1, bias=False),
             nn.BatchNorm2d(self.F1 * self.D),
             nn.ELU(),
             nn.AvgPool2d((1, 4)),
@@ -127,12 +129,11 @@ class EEGNet(BaseNet):
         )
 
     def forward(self, x):
-        x = x.unsqueeze(1).permute(0, 1, 3, 2)  # [B, C, T, H] -> [B, 1, H, T]
-        x = self.conv1(x)
+        x = x.unsqueeze(1).permute(0, 1, 3, 2)  
         x = self.separableConv(x)
         x = x.flatten(start_dim=1)
         self.build_fc(x, x.device)
-        return x
+        return x, None
     
 class modelType(nn.Module):
     def __init__(self, model_type, **kwargs):
