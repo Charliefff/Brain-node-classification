@@ -2,16 +2,31 @@ import yaml
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-import argparse  # 引入 argparse 模組
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+import argparse 
 
 from model import modelType
 from trainer import test_cnn, train_cnn
 from load_data import load_data_with_dataloader
 
 import warnings
+import os
+import random
+import numpy as np
 
 # 忽略 UserWarning
 warnings.filterwarnings("ignore", category=UserWarning)
+
+def set_seed(seed=0):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 如果使用多GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 
 def read_config(filepath='config.yaml') -> dict:
     with open(filepath, 'r') as file:
@@ -41,7 +56,7 @@ def printConfig(config):
             print(f"{key}: {config[key]}")
 
     print("\n[Training]")
-    for key in ["batch_size", "channels", "num_epochs", "learning_rate"]:
+    for key in ["seed", "init_weight","batch_size", "num_epochs", "learning_rate"]:
         if key in config:
             print(f"{key}: {config[key]}")
 
@@ -54,13 +69,14 @@ def printConfig(config):
 
 
 def main():
-
     cli_params = read_params()
     config = read_config(filepath=cli_params["config"])
+    set_seed(config["seed"])
 
     config.update({k: v for k, v in cli_params.items() if v is not None})    
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
     device = torch.device(device)
     printConfig(config=config)
     
@@ -69,8 +85,8 @@ def main():
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=config["learning_rate"], weight_decay=1e-3)
-
+    optimizer = Adam(model.parameters(), lr=config["learning_rate"], weight_decay=1e-4)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
     print("Starting training...")
     train_cnn(
         train_loader, 
@@ -79,10 +95,13 @@ def main():
         model, 
         optimizer, 
         criterion, 
+        scheduler,
         num_epochs=config["num_epochs"], 
         device=device,
         log_dir=config["log_dir"],
-        save_path=config["save_path"]
+        save_path=config["save_path"], 
+        enable_atten=config["enable_atten"], 
+        model_name = config["model_type"]
     )
 
     

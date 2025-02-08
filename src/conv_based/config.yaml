@@ -1,31 +1,33 @@
 data:
-  #wavelet (1,30,375,64)
-  train_E: "../../dataset/training_data/wavelet/train_Preprocessing_E.pt"
-  train_W: "../../dataset/training_data/wavelet/train_Preprocessing_W.pt"
-  test_E: "../../dataset/training_data/wavelet/test_Preprocessing_E.pt"
-  test_W: "../../dataset/training_data/wavelet/test_Preprocessing_W.pt"
+  #wavelet (1,60,375,59)
+  train_E: "/data/tzeshinchen/1121/EEG_prediction/dataset/nonwavlet/train_Preprocessing_0.pt"
+  train_W: "/data/tzeshinchen/1121/EEG_prediction/dataset/nonwavlet/train_Preprocessing_2.pt"
+  test_E: "/data/tzeshinchen/1121/EEG_prediction/dataset/nonwavlet/test_Preprocessing_0.pt"
+  test_W: "/data/tzeshinchen/1121/EEG_prediction/dataset/nonwavlet/test_Preprocessing_2.pt"
   log_dir: "runs/waveletEGGNet" # runs/EEGNet, runs/CNN, runs/CNN3D ...
   save_path: "checkpoint/waveletEGGNet.pth" # checkpoint/EEGNet.pth, checkpoint/CNN.pth, checkpoint/CNN3D.pth ...
 
+
 training:
+  seed: 0
+  init_w: "xavier" # xavier, he, normal, orthogonal
   batch_size: 128
-  channels : 64
-  num_epochs: 40
-  learning_rate: 0.0002
+  num_epochs: 20
+  learning_rate: 0.001
 
 model:
-  model_type: "waveletEGGNet" # waveletEGGNet, EEGNet, CNN, CNN3D
+  model_type: "EEGNet" # waveletEEGNet, EEGNet, CNN, CNN3D, EEGNetV4, EEGNetV1, waveletEEGNetV4, TSGLEEGNet
   num_classes: 2
-  channels: 64
-  kernLength: 64
+  channels: 59
+  kernLength: 59
   squeeze_dim: 1
-  F1: 8
-  F2: 16
+  F1: 2
+  F2: 4
+  Dim_expand: 2 # F1 * Dim_expand = F2
   poolKern1: 4
   poolKern2: 8
-  dropoutRate: 0.2
-  dropoutType: "Dropout" # SpatialDropout2D, Dropout
-  Dim_expand: 2 # F1 * Dim_expand = F2
-  enable_atten: True
+  dropoutRate: 0.8
+  dropoutType: "SpatialDropout2D" # SpatialDropout2D, Dropout
+  enable_atten: False
 
 
