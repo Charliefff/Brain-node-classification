@@ -49,7 +49,7 @@ The following models are implemented in `graph_based/model.py`:
 
 ## Dataset Formatting
 
-- **Non-wavelet Data:** Must be formatted as `(1, Channel, Time)`.
+- **Non-wavelet Data:** Must be formatted as `(Channel, Time)`.
 - **Wavelet Data:** Must be formatted as `(W, Channel, Time)`, where `W` represents the wavelet dimension.
 
 ## Key Files and Directories
