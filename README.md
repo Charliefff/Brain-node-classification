@@ -47,6 +47,11 @@ The following models are implemented in `graph_based/model.py`:
 - **GAT** (Graph Attention Network)
 - **GAT_GCN** (Hybrid GAT and GCN Model)
 
+## Dataset Formatting
+
+- **Non-wavelet Data:** Must be formatted as `(1, Channel, Time)`.
+- **Wavelet Data:** Must be formatted as `(W, C, T)`, where `W` represents the wavelet dimension.
+
 ## Key Files and Directories
 
 - `conv_based/model.py` & `graph_based/model.py`  
