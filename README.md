@@ -5,6 +5,7 @@ This repository contains deep learning models and related configurations, organi
 ## Project Structure
 
 ```
+./src
 ├── conv_based/                # Convolution-based models (CNN)
 │   ├── model.py               # CNN model definition
 │   ├── config.yaml            # Training hyperparameters and model settings
