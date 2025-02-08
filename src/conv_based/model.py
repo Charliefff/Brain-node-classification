@@ -1,9 +1,8 @@
 import torch
-
 import torch.nn as nn
 import torch.nn.functional as F
 from basemodel import BaseNet
-from braindecode.models import EEGNetv4, EEGNetv1, Deep4Net, ShallowFBCSPNet
+from braindecode.models import EEGNetv4, EEGNetv1, Deep4Net
 from torch.nn.utils import weight_norm
 # from EEGGENet import EEGGENet
 class CNN(BaseNet):
@@ -382,86 +381,6 @@ class EEGNetV1(BaseNet):
     def forward(self, x):
         # print(x.shape)
         return self.model(x), None
-class wavTSGLEEGNet(BaseNet):
-    def __init__(self, **kwargs):
-        super(wavTSGLEEGNet, self).__init__(**kwargs)
-
-        self.dropout_layer = nn.Dropout2d if self.dropoutType == 'SpatialDropout2D' else nn.Dropout
-        self.convtoEGG = nn.Conv2d(30, self.squeeze_dim, (1, 1), padding='same', bias=False) #(b, 30, a, t) -> (b, 1, a, t)
-        # First convolution layer
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(1, 16, (1, self.kernLength), padding='same', bias=False),
-            nn.BatchNorm2d(16),
-        )
-
-        # Depthwise convolution layer
-        self.depthwise = nn.Sequential(
-            nn.Conv2d(16, 160, (1, 59), groups=16, bias=False),
-            nn.BatchNorm2d(160),
-            nn.ELU(),
-            nn.AvgPool2d((4, 1)),
-            self.dropout_layer(self.dropoutRate),
-        )
-
-
-        # Second convolution layer
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(160, 160, (1, 16), padding='same', bias=False),
-            nn.BatchNorm2d(160),
-            nn.ELU(),
-            nn.AvgPool2d((8, 1)),
-            self.dropout_layer(self.dropoutRate),
-        )
-
-    def forward(self, x):
-        
-        x = x.permute(0, 1, 3, 2)  #  (batch, 30, times, Chans)
-        x = self.convtoEGG(x)
-        x = self.conv1(x) #(batch, F1, times, Chans)
-        feature = self.depthwise(x) # (batch, F1*D, times, Chans)
-        x = x.flatten(start_dim=1)  # Flatten for FC
-        self.build_fc(x, x.device)  # Dynamically build FC layers
-        return self.fc(x), feature
-    
-class TSGLEEGNet(BaseNet):
-    def __init__(self, **kwargs):
-        super(TSGLEEGNet, self).__init__(**kwargs)
-
-        self.dropout_layer = nn.Dropout2d if self.dropoutType == 'SpatialDropout2D' else nn.Dropout
-
-        # First convolution layer
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(1, 16, (1, self.kernLength), padding='same', bias=False),
-            nn.BatchNorm2d(16),
-        )
-
-        # Depthwise convolution layer
-        self.depthwise = nn.Sequential(
-            nn.Conv2d(16, 160, (1, 59), groups=16, bias=False),
-            nn.BatchNorm2d(160),
-            nn.ELU(),
-            nn.AvgPool2d((4, 1)),
-            self.dropout_layer(self.dropoutRate),
-        )
-
-
-        # Second convolution layer
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(160, 160, (1, 16), padding='same', bias=False),
-            nn.BatchNorm2d(160),
-            nn.ELU(),
-            nn.AvgPool2d((8, 1)),
-            self.dropout_layer(self.dropoutRate),
-        )
-
-    def forward(self, x):
-        x = x.unsqueeze(1)  #(batch, 1, Chans, times)
-        x = x.permute(0, 1, 3, 2)  #  (batch, 1, times, Chans)
-        x = self.conv1(x) #(batch, F1, times, Chans)
-        feature = self.depthwise(x) # (batch, F1*D, times, Chans)
-        x = x.flatten(start_dim=1)  # Flatten for FC
-        self.build_fc(x, x.device)  # Dynamically build FC layers
-        return self.fc(x), feature
     
 class modelType(nn.Module):
     def __init__(self, model_type, **kwargs):
@@ -475,8 +394,6 @@ class modelType(nn.Module):
             "EEGNetV4": EEGNetV4,
             "EEGNetV1": EEGNetV1,
             "waveletEEGNetV4": waveletEEGNetV4,
-            "TSGLEEGNet": TSGLEEGNet,  # Add TSGLEEGNet as an option
-            "wavTSGLEEGNet": wavTSGLEEGNet,
             "DeepCONV": DeepCONV, 
             "wavDeepCONV":wavDeepCONV, 
             "ShallowConvNet":ShallowConvNet, 
