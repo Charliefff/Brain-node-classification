@@ -28,7 +28,6 @@ This repository contains deep learning models and related configurations, organi
 
 The following models are implemented in `conv_based/model.py`:
 
-- **EEGNet**
 - **CNN**
 - **CNN_3D**
 - **EEGNetV1**
